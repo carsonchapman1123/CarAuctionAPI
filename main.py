@@ -23,16 +23,6 @@ async def root():
     return {"message": "Welcome to the car-auction-api!"}
 
 
-@app.get("/porsche")
-async def porsche():
-    return {"message": "Porsche cars"}
-
-
-@app.get("/listing")
-async def listing():
-    return {"essentials": {"seller": "Carson", "Location": "San Jose, CA"}}
-
-
 @app.get("/listings/{listing_id}", response_model=Listing)
 async def read_listing(listing_id: str):
     return listings[listing_id]
