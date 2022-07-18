@@ -1,5 +1,6 @@
 from collections import ChainMap, deque
-from contextlib import asynccontextmanager, closing
+from contextlib import contextmanager, closing
+from contextvars import ContextVar
 
 
 class ContextHandle:
@@ -11,6 +12,9 @@ class ContextHandle:
         self.ACCUMULATED_CONTEXT = {}
         self.CONTEXT.maps.appendleft(items)
         self.ACCUMULATED_CONTEXT.update(items)
+
+    def __iter__(self):
+        return iter(self.CONTEXT.items())
 
     @property
     def context(self):
@@ -31,6 +35,12 @@ class ContextHandle:
         for key in keys:
             self.items.pop(key, None)
 
+    def reset_accumulated_context(self):
+        try:
+            return self.ACCUMULATED_CONTEXT
+        finally:
+            self.ACCUMULATED_CONTEXT = {}
+
     def close(self):
         if self.closed:
             raise RuntimeError("ContextHandle already closed")
@@ -38,10 +48,13 @@ class ContextHandle:
         self.CONTEXT.maps.popleft()
         self.closed = True
 
-        return {}
+        return self.reset_accumulated_context()
 
 
-@asynccontextmanager
+@contextmanager
 def context(**items):
     with closing(ContextHandle(**items)) as handle:
         yield handle
+
+
+request_context: ContextVar[ContextHandle] = ContextVar("context_handle")
