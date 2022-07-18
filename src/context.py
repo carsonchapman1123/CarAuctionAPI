@@ -1,6 +1,7 @@
 from collections import ChainMap, deque
 from contextlib import closing, contextmanager
 from contextvars import ContextVar
+from src.singleton import singleton
 
 
 class ContextHandle:
@@ -51,10 +52,16 @@ class ContextHandle:
         return self.reset_accumulated_context()
 
 
+@singleton
+class GlobalContextHandle(ContextHandle):
+    pass
+
+
 @contextmanager
 def context(**items):
-    with closing(ContextHandle(**items)) as handle:
+    with closing(GlobalContextHandle(**items)) as handle:
+        handle.add(**items)
         yield handle
 
 
-request_context: ContextVar[ContextHandle] = ContextVar("context_handle")
+request_context: ContextVar[GlobalContextHandle] = ContextVar("context_handle")

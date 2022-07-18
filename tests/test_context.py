@@ -1,8 +1,8 @@
-from src.context import ContextHandle, context
+from src.context import GlobalContextHandle, context
 
 
 def test_context_manager():
-    outer = ContextHandle(outer=True)
+    outer = GlobalContextHandle(outer=True)
     with context(name_1="value_1") as handle:
         assert "outer" in dict(handle)
         assert "name_1" in dict(handle)
