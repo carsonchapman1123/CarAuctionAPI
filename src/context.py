@@ -1,5 +1,5 @@
 from collections import ChainMap, deque
-from contextlib import contextmanager, closing
+from contextlib import closing, contextmanager
 from contextvars import ContextVar
 
 
