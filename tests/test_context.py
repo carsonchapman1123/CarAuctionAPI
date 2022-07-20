@@ -1,4 +1,5 @@
 from src.context import GlobalContextHandle, context
+import pytest
 
 
 def test_context_manager():

@@ -1,3 +1,5 @@
+import asyncio
+
 from typing import Union
 
 from fastapi import FastAPI
@@ -38,3 +40,18 @@ async def update_listing(listing_id: str, listing: Listing):
 @app.post("/listings/")
 async def create_listing(listing: Listing):
     return listing
+
+
+async def foo(bar):
+    print(f'{bar} started')
+    await asyncio.sleep(1)
+    print(f'{bar} finished')
+
+
+async def main():
+    await asyncio.gather(foo('first'), foo('second'))
+
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
