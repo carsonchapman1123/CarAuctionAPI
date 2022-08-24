@@ -13,6 +13,7 @@ flake8 = "^4.0.1"
 flakeheaven = "^2.0.0"
 isort = "^5.10.1"
 pytest = "^7.1.2"
+starlette-context = "^0.3.4"
 
 [tool.poetry.dev-dependencies]
 

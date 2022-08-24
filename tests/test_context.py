@@ -1,21 +1,19 @@
-from src.context import GlobalContextHandle, context
-import pytest
+import json
+
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from main import app
+
+# app = FastAPI()
+
+client = TestClient(app)
 
 
-def test_context_manager():
-    outer = GlobalContextHandle(outer=True)
-    with context(name_1="value_1") as handle:
-        assert "outer" in dict(handle)
-        assert "name_1" in dict(handle)
-        assert "name_2" not in dict(handle)
-
-        handle.add(name_2="value_2")
-        assert "name_1" in dict(handle)
-        assert "name_2" in dict(handle)
-
-        handle.remove("name_1")
-        assert "name_1" not in dict(handle)
-        assert "name_2" in dict(handle)
-
-    assert "name_1" not in dict(outer)
-    assert "name_2" not in dict(outer)
+def test_read_main():
+    test_str = "Hello!"
+    response = client.get("/", headers={"X-Request_ID": test_str})
+    assert response.status_code == 200
+    assert response.json() == {"msg": "Hello World"}
+    print(type(response.headers["x-context"]))
+    assert json.loads(response.headers["x-context"])["X-Request-ID"] == test_str

@@ -1,12 +1,37 @@
 import asyncio
-
+import json
+import time
 from typing import Union
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from starlette_context import context, request_cycle_context
 
-app = FastAPI()
+from src.context import ContextHandle
+
+
+async def my_context_dependency(x_request_id=Header(...)):
+    # When used a Depends(), this fucntion get the `X-Client_ID` header,
+    # which will be documented as a required header by FastAPI.
+    # use `x_client_id: str = Header(None)` for an optional header.
+    print("x_request_id", x_request_id, "\n\n\n\n\n\n\n\nHEREHEREHERE")
+    data = {"x_request_id": x_request_id}
+    with request_cycle_context(data):
+        # yield allows it to pass along to the rest of the request
+        yield
+
+
+# use it as Depends across the whole FastAPI app
+app = FastAPI()  # dependencies=[Depends(my_context_dependency)])
+
+
+@app.get("/")
+async def hello():
+    # client = context["x_client_id"]
+    # return f"hello {client}"
+    return {"msg": "Hello World"}
 
 
 class Listing(BaseModel):
@@ -18,11 +43,6 @@ listings = {
     "0": {"lot_number": 0, "make": "Porsche"},
     "1": {"lot_number": 0, "make": "Ferrari"},
 }
-
-
-@app.get("/")
-async def root():
-    return {"message": "Welcome to the car-auction-api!"}
 
 
 @app.get("/listings/{listing_id}", response_model=Listing)
@@ -42,16 +62,21 @@ async def create_listing(listing: Listing):
     return listing
 
 
-async def foo(bar):
-    print(f'{bar} started')
-    await asyncio.sleep(1)
-    print(f'{bar} finished')
+"""
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
+"""
 
 
-async def main():
-    await asyncio.gather(foo('first'), foo('second'))
-
-
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+@app.middleware("http")
+async def add_request_context(request: Request, call_next):
+    response = await call_next(request)
+    x_request_id = request.headers["x-request_id"]
+    data = {"X-Request-ID": x_request_id}
+    response.headers["X-Context"] = json.dumps(data)
+    return response
